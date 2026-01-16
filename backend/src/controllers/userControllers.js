@@ -1,11 +1,12 @@
 import { User } from "../models/userModel.js";
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import sendOTPEmail from "../service/mail.js";
+import crypto from 'crypto'
+import sendOTPEmail, { sendApprovedEmail, sendHrApprovalEmail, sendRejectedEmail } from "../service/mail.js";
 
 export const regiterUser = async (req, res)=>{
     try {
-        const {name, email, password, role} = req.body
+        const {name, email, password} = req.body
 
         //validation
         if(!name||!email||!password){
@@ -32,10 +33,10 @@ export const regiterUser = async (req, res)=>{
             name,
             email,
             password: hashedPassword,
-            role,
             otp: hashedOtp,
             otpExpiry: otpExpiry,
-            isVerified: false
+            isVerified: false,
+            status:'pending'
         })
 
         sendOTPEmail(email, otp)
@@ -56,4 +57,123 @@ export const regiterUser = async (req, res)=>{
     }
 }
 
+export const verifyOtp = async (req, res)=>{
+    try {
+        const {email, otp} = req.body;
 
+        //validation
+        if(!email||!otp){
+            return res.status(403).json({message: "Email and OTP are required"})
+        }
+
+        //find user
+        const user = await User.findOne({email})
+        if(!user){
+            return res.status(403).json({message: "user not found"})
+        }
+
+        //user already verified
+        if(user.isVerified){
+            return res.status(403).json({message: "user already verified"})
+        }
+
+        //otp expiry check
+        if(user.otpExpiry<Date.now()){
+            return res.status(400).json({message: "OTP expired"})
+        }
+
+        //match otp
+        const isOtpValid = await bcrypt.compare(otp, user.otp)
+        if(!isOtpValid){
+            return res.status(400).json({message: "OTP invalid"})
+        }
+
+        //verify user
+        user.otp = null;
+        user.otpExpiry=null;
+        user.isVerified = true;
+
+        // const approvalToken = crypto.randomBytes(32).toString("hex")
+        // user.approvalToken = approvalToken
+        await user.save()
+
+        await sendHrApprovalEmail(user)
+        res.status(200).json({status: 200, message: "OTP Verified, Please login"})
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).json({message: error.message})
+    }
+}
+
+export const loginUser = async (req, res)=>{
+    try {
+        const {email, password} = req.body;
+
+        //validation
+        if(!email||!password){
+            return res.status(400).json({message: "Email and Password are required"})
+        }
+
+        //find user
+        const user = await User.findOne({email})
+        if(!user){
+            return res.status(400).json({message: "User not found"})
+        }
+
+        //verified user only
+        if(!user.isVerified){
+            return res.status(400).json({message: "Please verify first"})
+        }
+
+        //password match
+        const isMatch = await bcrypt.compare(password, user.password)
+        if(!isMatch){
+            return res.status(400).json({message: "Invalid credentials"})
+        }
+
+        //approval status
+        if(user.status!=='approved'){
+            return res.status(403).json({message: "Your account is not approved by HR"})
+        }
+
+        //token generation
+        const token = jwt.sign({id: user._id, role: user.role}, process.env.JWT_SECRET, {expiresIn: "7d"})
+
+        res.status(200).json({status: 200, message: "Login Successfull", token: token, user:{
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        }})
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).json({message: error.message})
+    }
+}
+
+export const getPendingUsers = async(req, res)=>{
+    const users = await User.find({status: 'pending'}).select('-password')
+    res.json(users)
+}
+
+export const approveUser = async (req, res)=>{
+    const {email} = req.body
+    const user = await User.findOne({email});
+
+    user.status = 'approved'
+    await sendApprovedEmail(user)
+    await user.save()
+
+    res.json({message: "user approved successfully"})
+}
+
+export const rejectUser = async (req, res)=>{
+    const {email} = req.body
+    const user = await User.findOne({email})
+
+    user.status = "rejected"
+    await sendRejectedEmail()
+    await user.save()
+    
+    res.json({message: "User rejected successfully"})
+}

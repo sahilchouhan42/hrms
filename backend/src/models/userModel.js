@@ -29,7 +29,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum:['employee', 'admin', 'hr'],
         default: "employee"
-    }
+    },
+    status:{
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
+    },
+    // approvalToken:{
+    //     type: String
+    // }
 }, {timestamps: true})
 
 export const User = mongoose.model("User", userSchema)
