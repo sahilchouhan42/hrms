@@ -1,0 +1,58 @@
+<!-- <h2>Leave Approved ✅</h2>
+
+<p>Hello <%= name %>,</p>
+
+<p>Your leave request has been <b>approved</b>.</p>
+
+<p><b>Leave Type:</b> <%= leaveType %></p>
+<p><b>Dates:</b> <%= startDate %> to <%= endDate %></p>
+
+<p>– HR Team</p> -->
+
+
+<div style="
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 24px;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+">
+
+  <h2 style="
+    color: #16a34a;
+    margin-bottom: 16px;
+  ">
+    Leave Approved ✅
+  </h2>
+
+  <p style="font-size: 15px;">
+    Hello <strong><%= name %></strong>,
+  </p>
+
+  <p style="font-size: 15px;">
+    Your leave request has been <strong style="color:#16a34a;">approved</strong>.
+  </p>
+
+  <div style="
+    background-color: #ffffff;
+    padding: 16px;
+    border-radius: 6px;
+    margin: 16px 0;
+    border-left: 4px solid #16a34a;
+  ">
+    <p style="margin: 6px 0;">
+      <strong>Leave Type:</strong> <%= leaveType %>
+    </p>
+    <p style="margin: 6px 0;">
+      <strong>Dates:</strong> <%= startDate %> to <%= endDate %>
+    </p>
+  </div>
+
+  <p style="margin-top: 24px; font-size: 14px;">
+    – <strong>HR Team</strong>
+  </p>
+
+</div>

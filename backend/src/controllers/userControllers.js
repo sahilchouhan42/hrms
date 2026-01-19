@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import sendOTPEmail, { sendApprovedEmail, sendHrApprovalEmail, sendRejectedEmail } from "../service/mail.js";
+import { ApiResponse } from "../utils/apiResponse.js";
 
 export const regiterUser = async (req, res)=>{
     try {
@@ -43,13 +44,7 @@ export const regiterUser = async (req, res)=>{
 
         console.log(`OTP is ${otp}`)
 
-        res.status(201).json({message: "User registered successfully", status: 201, user:{
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            isVerified: user.isVerified
-        }})
+        res.status(201).json(new ApiResponse(201, user, "User registered successfully"))
 
     } catch (error) {
         console.log(error.message)
@@ -98,7 +93,7 @@ export const verifyOtp = async (req, res)=>{
         await user.save()
 
         await sendHrApprovalEmail(user)
-        res.status(200).json({status: 200, message: "OTP Verified, Please login"})
+        res.status(200).json(new ApiResponse(201, "OTP Verified, plz ask hr to approve"))
     } catch (error) {
         console.log(error.message)
         return res.status(500).json({message: error.message})
@@ -136,15 +131,26 @@ export const loginUser = async (req, res)=>{
             return res.status(403).json({message: "Your account is not approved by HR"})
         }
 
+        if(!user.isActive){
+            return res.status(403).json({message: "Your account has been deactivated. Please contact HR."})
+        }
+
         //token generation
         const token = jwt.sign({id: user._id, role: user.role}, process.env.JWT_SECRET, {expiresIn: "7d"})
 
-        res.status(200).json({status: 200, message: "Login Successfull", token: token, user:{
+        // res.status(200).json({status: 200, message: "Login Successfull", token: token, user:{
+        //     id: user._id,
+        //     name: user.name,
+        //     email: user.email,
+        //     role: user.role
+        // }})
+
+        res.status(200).json(new ApiResponse(200,{token: token, user:{
             id: user._id,
             name: user.name,
             email: user.email,
             role: user.role
-        }})
+        }}, "Login Successfull"))
     } catch (error) {
         console.log(error.message)
         return res.status(500).json({message: error.message})
@@ -153,7 +159,7 @@ export const loginUser = async (req, res)=>{
 
 export const getPendingUsers = async(req, res)=>{
     const users = await User.find({status: 'pending'}).select('-password')
-    res.json(users)
+    res.status(200).json(new ApiResponse(200, users, "All Pending Users"))
 }
 
 export const approveUser = async (req, res)=>{
@@ -176,4 +182,62 @@ export const rejectUser = async (req, res)=>{
     await user.save()
     
     res.json({message: "User rejected successfully"})
+}
+
+export const getAllEmployees = async (req, res)=>{
+    try {
+        const employees = await User.find({role: 'employee'}, {password: 0})
+
+        return res.status(200).json(new ApiResponse(200, employees, "All employees data"))
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).json({message: error.message})
+    }
+}
+
+export const deactivateEmployee = async (req, res)=>{
+    try {
+        const {email} = req.body
+        const user = await User.findOne({email})
+        console.log(user)
+        if(!user){
+            return res.status(403).json({message: "User not found"})
+        }
+
+        if(user.role!=='employee'){
+            return res.status(400).json({message: "Only employees can be deactivated"})
+        }
+
+        user.isActive = false
+        await user.save()
+
+        res.status(200).json(new ApiResponse(200, "User is deactivated"))
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).json({message: error.message})
+    }
+}
+
+
+export const activateEmployee = async (req, res)=>{
+    try {
+        const {email} = req.body
+        const user = await User.findOne({email})
+
+        if(!user){
+            return res.status(403).json({message: "User not found"})
+        }
+
+        if(user.role!=='employee'){
+            return res.status(400).json({message: "Only employees can be deactivated"})
+        }
+
+        user.isActive = true    
+        await user.save()
+
+        res.status(200).json(new ApiResponse(200, "User is activated"))
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).json({message: error.message})
+    }
 }

@@ -1,0 +1,72 @@
+<!-- <h2>New Leave Request</h2>
+
+<p><b>Employee:</b> <%= name %></p>
+<p><b>Email:</b> <%= email %></p>
+<p><b>Leave Type:</b> <%= leaveType %></p>
+<p><b>From:</b> <%= startDate %></p>
+<p><b>To:</b> <%= endDate %></p>
+<p><b>Reason:</b> <%= reason %></p>
+
+<p>Please login to HRMS and approve or reject this leave.</p>
+
+<p>– HRMS System</p> -->
+
+
+<div style="
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 24px;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+">
+
+  <h2 style="
+    color: #2563eb;
+    margin-bottom: 16px;
+  ">
+    New Leave Request 📩
+  </h2>
+
+  <p style="font-size: 15px;">
+    A new leave request has been submitted with the following details:
+  </p>
+
+  <div style="
+    background-color: #ffffff;
+    padding: 16px;
+    border-radius: 6px;
+    margin: 16px 0;
+    border-left: 4px solid #2563eb;
+  ">
+    <p style="margin: 6px 0;">
+      <strong>Employee:</strong> <%= name %>
+    </p>
+    <p style="margin: 6px 0;">
+      <strong>Email:</strong> <%= email %>
+    </p>
+    <p style="margin: 6px 0;">
+      <strong>Leave Type:</strong> <%= leaveType %>
+    </p>
+    <p style="margin: 6px 0;">
+      <strong>From:</strong> <%= startDate %>
+    </p>
+    <p style="margin: 6px 0;">
+      <strong>To:</strong> <%= endDate %>
+    </p>
+    <p style="margin: 6px 0;">
+      <strong>Reason:</strong> <%= reason %>
+    </p>
+  </div>
+
+  <p style="font-size: 14px;">
+    Please login to <strong>HRMS</strong> to approve or reject this leave request.
+  </p>
+
+  <p style="margin-top: 24px; font-size: 14px;">
+    – <strong>HRMS System</strong>
+  </p>
+
+</div>

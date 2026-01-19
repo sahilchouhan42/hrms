@@ -12,6 +12,11 @@ const hrApprovalTemplate = path.resolve(__dirname, "../views/email/hrApproval.ej
 const approvedTemplate = path.resolve(__dirname, "../views/email/approved.ejs")
 const rejectedTemplate = path.resolve(__dirname, "../views/email/rejected.ejs")
 
+//leave template
+const leaveRequestTemplate = path.resolve(__dirname, "../views/email/leaveRequest.ejs")
+const leaveApprovedTemplate = path.resolve(__dirname, "../views/email/leaveApproved.ejs")
+const leaveRejectedTemplate = path.resolve(__dirname, "../views/email/leaveRejected.ejs")
+
 // console.log(process.env.EMAIL_USER)
 // console.log(process.env.EMAIL_PASS)
 
@@ -72,6 +77,56 @@ export async function sendRejectedEmail(user){
         from: process.env.EMAIL_USER,
         to: user.email,
         subject: "Account Rejected",
+        html
+    })
+}
+
+export const sendLeaveRequestEmail = async (leave, employee)=>{
+    const html = await ejs.renderFile(leaveRequestTemplate, {
+        name: employee.name,
+        email:employee.email,
+        leaveType: leave.leaveType,
+        startDate: leave.startDate.toDateString(),
+        endDate: leave.endDate.toDateString(),
+        reason: leave.reason
+    })
+
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: "aman@test.com",
+        subject: "New Leave Request",
+        html
+    })
+}
+
+export const sendLeaveApprovedEmail= async (leave, employee)=>{
+    const html = await ejs.renderFile(leaveApprovedTemplate, {
+        name: employee.name,
+        leaveType: leave.leaveType,
+        startDate: leave.startDate.toDateString(),
+        endDate:leave.endDate.toDateString()
+    })
+
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: employee.email,
+        subject: "Leave Approved",
+        html
+    })
+}
+
+export const sendLeaveRejectedEmail = async (leave, employee)=>{
+    const html = await ejs.renderFile(leaveRejectedTemplate, {
+        name: employee.name,
+        leaveType: leave.leaveType,
+        startDate: leave.startDate.toDateString(),
+        endDate: leave.endDate.toDateString()
+    })
+
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: employee.email,
+        subject: "Leave Rejected",
         html
     })
 }
